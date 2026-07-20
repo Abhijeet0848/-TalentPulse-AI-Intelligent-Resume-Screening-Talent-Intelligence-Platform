@@ -119,6 +119,4 @@ For web application security, users and administrators should adhere to standard
 
 ---
 
-## 📜 License
 
-This project is licensed under the **MIT License**.
