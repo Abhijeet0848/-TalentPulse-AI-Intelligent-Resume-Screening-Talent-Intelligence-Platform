@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TalentPulse AI - Resume Screening System{% endblock %}</title>
+    <!-- Script to prevent theme flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Mobile Top Header -->
+    <div class="mobile-topbar">
+        <div class="sidebar-logo" style="padding: 0; border: none;">
+            <div class="logo-icon" style="width: 32px; height: 32px; font-size: 16px;">
+                <i class="fa-solid fa-bolt-lightning"></i>
+            </div>
+            <div class="logo-text">
+                <h2 style="font-size: 16px;">TalentPulse <span style="color: var(--primary);">AI</span></h2>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="theme-toggle-btn" title="Switch Theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button id="sidebarToggleBtn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 16px;">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="appSidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">
+                <i class="fa-solid fa-bolt-lightning"></i>
+            </div>
+            <div class="logo-text">
+                <h2>TalentPulse <span style="color: var(--primary);">AI</span></h2>
+                <span>
+                    {% if session.get('user_role') == 'Admin' %}Admin Console
+                    {% elif session.get('user_role') == 'HR Manager' %}HR Portal
+                    {% elif session.get('user_role') == 'Candidate' %}Candidate Portal
+                    {% else %}Recruiter Workbench{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <ul class="nav-links">
+            <li>
+                <a href="{{ url_for('dashboard') }}" class="{% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                </a>
+            </li>
+            
+            {% if session.get('user_role') in ['Recruiter', 'HR Manager', 'Admin'] %}
+            <li>
+                <a href="{{ url_for('jobs') }}" class="{% if active_page == 'jobs' %}active{% endif %}">
+                    <i class="fa-solid fa-briefcase"></i> Job Workbench
+                </a>
+            </li>
+            {% endif %}
+
+
+
+            
+            {% if session.get('user_role') in ['Recruiter', 'Admin', 'Candidate'] %}
+            <li>
+                <a href="{{ url_for('screen') }}" class="{% if active_page == 'screen' %}active{% endif %}">
+                    <i class="fa-solid fa-file-arrow-up"></i> Resume Screener
+                </a>
+            </li>
+            {% endif %}
+
+            <li>
+                <a href="{{ url_for('leaderboard') }}" class="{% if active_page == 'leaderboard' %}active{% endif %}">
+                    <i class="fa-solid fa-trophy"></i> Candidate Ranking
+                </a>
+            </li>
+
+            <li>
+                <a href="{{ url_for('compare_candidates') }}" class="{% if active_page == 'compare' %}active{% endif %}">
+                    <i class="fa-solid fa-code-compare"></i> Candidate Compare
+                </a>
+            </li>
+
+            {% if session.get('user_role') in ['HR Manager', 'Admin'] %}
+            <li>
+                <a href="{{ url_for('analytics') }}" class="{% if active_page == 'analytics' %}active{% endif %}">
+                    <i class="fa-solid fa-diagram-project"></i> ML Analytics
+                </a>
+            </li>
+            {% endif %}
+
+            {% if session.get('user_role') == 'Admin' %}
+            <li style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-glass);">
+                <a href="{{ url_for('admin_users') }}" class="{% if active_page == 'admin_users' %}active{% endif %}" style="color: var(--accent);">
+                    <i class="fa-solid fa-users-gear"></i> User Control
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="sidebar-footer">
+            {% if session.get('user_id') %}
+            <div style="padding: 10px 12px; background: var(--bg-card-hover); border-radius: var(--radius-md); margin-bottom: 12px; border: 1px solid var(--border-glass);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #FFF;">
+                        {{ session.get('user_name', 'U')[0] }}
+                    </div>
+                    <div style="overflow: hidden;">
+                        <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                            {{ session.get('user_name', 'User') }}
+                        </div>
+                        <div style="font-size: 11px; font-weight: 600; color: {% if session.get('user_role') == 'Admin' %}var(--accent){% elif session.get('user_role') == 'HR Manager' %}var(--emerald){% else %}var(--primary){% endif %};">
+                            {% if session.get('user_role') == 'Admin' %}<i class="fa-solid fa-shield-halved"></i> Admin{% elif session.get('user_role') == 'HR Manager' %}<i class="fa-solid fa-user-tie"></i> HR Manager{% elif session.get('user_role') == 'Candidate' %}<i class="fa-solid fa-user"></i> Candidate{% else %}<i class="fa-solid fa-code"></i> Recruiter{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary" style="width: 100%; font-size: 12px; padding: 8px 12px; color: var(--rose);">
+                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            </a>
+            {% else %}
+            <div style="display: flex; gap: 8px;">
+                <a href="{{ url_for('login') }}" class="btn btn-secondary" style="flex: 1; font-size: 12px; padding: 8px;">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-primary" style="flex: 1; font-size: 12px; padding: 8px;">Sign Up</a>
+            </div>
+            {% endif %}
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-wrapper">
+        <header class="top-header">
+            <div class="header-title">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                <p>{% block page_subtitle %}AI Candidate Screening & Talent Intelligence Platform{% endblock %}</p>
+            </div>
+
+            <div class="header-actions">
+                <!-- 2. Real-Time Notification Bell Icon -->
+                <div style="position: relative;">
+                    <button class="icon-btn" id="notifBellBtn" title="Notifications" style="width: 38px; height: 38px; border-radius: 50%; background: var(--bg-card-hover); border: 1px solid var(--border-glass); color: var(--text-primary); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+                        <i class="fa-solid fa-bell"></i>
+                        <span style="position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: var(--rose); border-radius: 50%; border: 2px solid var(--bg-card);"></span>
+                    </button>
+
+                    <div id="notifDropdown" style="display: none; position: absolute; right: 0; top: 46px; width: 280px; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1000; padding: 12px;">
+                        <h5 style="font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 8px;">🔔 Live Notifications</h5>
+                        <ul style="list-style: none; font-size: 12px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px;">
+                            <li style="padding: 6px; background: var(--bg-card-hover); border-radius: 4px;">📄 John Doe uploaded resume (98% match)</li>
+                            <li style="padding: 6px; background: var(--bg-card-hover); border-radius: 4px;">⚡ AI completed screening 5 resumes</li>
+                            <li style="padding: 6px; background: var(--bg-card-hover); border-radius: 4px;">📅 2 Interviews scheduled for tomorrow</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button class="theme-toggle-btn" title="Switch Theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+
+
+                {% if session.get('user_role') in ['Recruiter', 'Admin', 'Candidate'] %}
+                <a href="{{ url_for('screen') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Screen Resumes
+                </a>
+                {% endif %}
+            </div>
+        </header>
+
+        <div style="margin-bottom: 24px; padding: 12px 20px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: space-between;
+            {% if session.get('user_role') == 'Admin' %}background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); color: var(--accent);
+            {% elif session.get('user_role') == 'HR Manager' %}background: rgba(5, 150, 105, 0.08); border: 1px solid rgba(5, 150, 105, 0.2); color: var(--emerald);
+            {% elif session.get('user_role') == 'Candidate' %}background: rgba(217, 119, 6, 0.08); border: 1px solid rgba(217, 119, 6, 0.2); color: var(--amber);
+            {% else %}background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.2); color: var(--primary);{% endif %}">
+            <span>
+                {% if session.get('user_role') == 'Admin' %}
+                🛡️ <strong>Administrator Workspace</strong>: Full system governance, user permissions, and ML model retraining.
+                {% elif session.get('user_role') == 'HR Manager' %}
+                👔 <strong>HR Executive Portal</strong>: Pipeline approvals, department stats, and candidate shortlists.
+                {% elif session.get('user_role') == 'Candidate' %}
+                👤 <strong>Candidate Portal</strong>: Upload resume, post target job roles, evaluate ATS fit score, and discover matched openings.
+
+                {% else %}
+                💻 <strong>Technical Recruiter Workspace</strong>: Resume parsing, TF-IDF skill matching, and fit score evaluation.
+                {% endif %}
+            </span>
+            <span style="font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Role: {{ session.get('user_role', 'Recruiter') }}
+            </span>
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 16. Floating AI Chat Copilot Drawer -->
+    <div id="aiChatDrawer" style="position: fixed; bottom: 84px; right: 24px; width: 340px; background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); display: none; flex-direction: column; z-index: 999; overflow: hidden;">
+        <div style="padding: 14px 18px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: #FFF; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <span>🤖 Ask TalentPulse AI Copilot</span>
+            <span id="closeChatBtn" style="cursor: pointer;"><i class="fa-solid fa-xmark"></i></span>
+        </div>
+        <div id="chatMessages" style="padding: 16px; height: 220px; overflow-y: auto; font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px;">
+            <div style="background: var(--bg-card-hover); padding: 8px 12px; border-radius: 8px;">
+                👋 Hi! Ask me to find React developers, summarize top candidates, or generate interview questions.
+            </div>
+        </div>
+        <div style="padding: 12px; border-top: 1px solid var(--border-glass); display: flex; gap: 8px;">
+            <input type="text" id="chatInput" class="form-control" style="font-size: 13px;" placeholder="Type question...">
+            <button id="sendChatBtn" class="btn btn-primary" style="padding: 8px 14px;"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Floating AI Chat Copilot Button -->
+    <button id="openChatBtn" class="btn btn-primary" style="position: fixed; bottom: 24px; right: 24px; border-radius: 30px; padding: 12px 20px; box-shadow: var(--shadow-lg); z-index: 998;">
+        <i class="fa-solid fa-robot"></i> Ask AI Copilot
+    </button>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            const sidebar = document.getElementById('appSidebar');
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+            }
+
+            const notifBtn = document.getElementById('notifBellBtn');
+            const notifDropdown = document.getElementById('notifDropdown');
+            if (notifBtn && notifDropdown) {
+                notifBtn.addEventListener('click', () => {
+                    notifDropdown.style.display = notifDropdown.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+
+            const openChatBtn = document.getElementById('openChatBtn');
+            const closeChatBtn = document.getElementById('closeChatBtn');
+            const aiChatDrawer = document.getElementById('aiChatDrawer');
+            const sendChatBtn = document.getElementById('sendChatBtn');
+            const chatInput = document.getElementById('chatInput');
+            const chatMessages = document.getElementById('chatMessages');
+
+            if (openChatBtn && aiChatDrawer) {
+                openChatBtn.addEventListener('click', () => {
+                    aiChatDrawer.style.display = aiChatDrawer.style.display === 'none' ? 'flex' : 'none';
+                });
+            }
+            if (closeChatBtn && aiChatDrawer) {
+                closeChatBtn.addEventListener('click', () => aiChatDrawer.style.display = 'none');
+            }
+
+            if (sendChatBtn && chatInput && chatMessages) {
+                sendChatBtn.addEventListener('click', async () => {
+                    const txt = chatInput.value.trim();
+                    if (!txt) return;
+
+                    const userMsg = document.createElement('div');
+                    userMsg.style.cssText = 'background: rgba(2, 132, 199, 0.1); padding: 8px 12px; border-radius: 8px; align-self: flex-end; color: var(--primary); font-weight: 600;';
+                    userMsg.textContent = txt;
+                    chatMessages.appendChild(userMsg);
+                    chatInput.value = '';
+
+                    try {
+                        const res = await fetch('/api/ai_chat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query: txt })
+                        });
+                        const data = await res.json();
+
+                        const aiMsg = document.createElement('div');
+                        aiMsg.style.cssText = 'background: var(--bg-card-hover); padding: 8px 12px; border-radius: 8px; color: var(--text-primary);';
+                        aiMsg.textContent = data.response;
+                        chatMessages.appendChild(aiMsg);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    } catch (e) {
+                        console.error(e);
+                    }
+                });
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

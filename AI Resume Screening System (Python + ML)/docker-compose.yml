@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: resume_screener_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - app_data:/app/instance
+      - uploads_data:/app/uploads
+    environment:
+      - FLASK_ENV=production
+      - PORT=5000
+    restart: unless-stopped
+
+volumes:
+  app_data:
+  uploads_data:

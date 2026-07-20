@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentPulse AI - Resume Screening & Talent Intelligence Platform</title>
+    <!-- Script to prevent theme flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Landing Header Navigation -->
+    <nav class="landing-navbar glass-effect">
+        <div class="sidebar-logo" style="padding: 0; border: none;">
+            <div class="logo-icon">
+                <i class="fa-solid fa-bolt-lightning"></i>
+            </div>
+            <div class="logo-text">
+                <h2>TalentPulse <span style="color: var(--primary);">AI</span></h2>
+                <span style="color: var(--primary);">Talent Intelligence</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <button class="theme-toggle-btn" title="Switch Theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
+            {% if session.get('user_id') %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                <i class="fa-solid fa-gauge"></i> Go to Dashboard
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary">Sign Out</a>
+            {% else %}
+            <button type="button" id="watchDemoBtn" class="btn btn-secondary" style="font-size: 13px;">
+                <i class="fa-solid fa-circle-play" style="color: var(--primary);"></i> Watch Demo
+            </button>
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">Sign In</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary">Get Started Free</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="landing-hero">
+        <div class="hero-badge">
+            <i class="fa-solid fa-microchip"></i> Supervised Random Forest & TF-IDF Vector Engine
+        </div>
+
+        <h1 class="hero-title">
+            Automate Resume Screening with <br><span style="background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Machine Learning</span> Intelligence
+        </h1>
+
+        <p class="hero-subtitle">
+            Parse hundreds of PDF, DOCX, and TXT resumes in seconds. Extract skill entities, compute mathematical Cosine Distance matrices, and rank talent on weighted multi-factor fit scores.
+        </p>
+
+        <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 48px; flex-wrap: wrap;">
+            <a href="{{ url_for('register') }}" class="btn btn-primary" style="padding: 14px 28px; font-size: 16px;">
+                <i class="fa-solid fa-bolt"></i> Start Screening Resumes Free
+            </a>
+            <button type="button" id="bookDemoBtn" class="btn btn-secondary" style="padding: 14px 28px; font-size: 16px;">
+                <i class="fa-solid fa-calendar-check" style="color: var(--primary);"></i> Book Demo
+            </button>
+        </div>
+
+        <!-- Interactive Resume Upload Simulator & AI Stepper -->
+        <div class="glass-card" style="max-width: 760px; margin: 0 auto; text-align: left; position: relative;">
+            <h4 style="font-size: 15px; font-weight: 700; color: #0F172A; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <span>⚡ Interactive Resume Upload & Parsing Demo</span>
+                <span class="badge badge-tech">Live Simulator</span>
+            </h4>
+
+            <div class="dropzone" id="heroDropzone" style="padding: 28px 20px;">
+                <div class="dropzone-icon" style="font-size: 36px; margin-bottom: 8px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <h5 style="font-size: 15px; font-weight: 600; color: #0F172A; margin-bottom: 4px;">
+                    Drag & Drop Candidate Resume (PDF/DOCX) or <span style="color: var(--primary); text-decoration: underline;">Browse File</span>
+                </h5>
+                <p style="font-size: 12px; color: var(--text-secondary);">Click to simulate instant AI extraction and match score calculation</p>
+                <input type="file" id="heroFileInput" accept=".pdf,.docx,.txt" style="display: none;">
+            </div>
+
+            <!-- Stepper Progress Output -->
+            <div id="heroSimResult" style="display: none; margin-top: 20px;">
+                <div style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px;" id="simStepLabel">
+                    📄 Reading Resume...
+                </div>
+                <div class="progress-bar-bg" style="height: 10px; margin-bottom: 16px;">
+                    <div class="progress-bar-fill fill-cyan" id="simProgressFill" style="width: 0%;"></div>
+                </div>
+
+                <div id="simOutputCard" style="display: none; padding: 16px; background: var(--bg-card-hover); border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <div style="font-size: 16px; font-weight: 700; color: #0F172A;">Sarah Jenkins, M.Sc.</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Extracted Category: Data Science & AI</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 11px; color: var(--text-muted);">Overall ATS Fit</div>
+                            <div style="font-size: 26px; font-weight: 800; color: var(--emerald);">92%</div>
+                        </div>
+                    </div>
+
+                    <!-- AI Match Bars -->
+                    <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px;">
+                        Extracted Skill Match Breakdown:
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                <span>Python & PyTorch</span>
+                                <span style="font-weight: 700;">100% Match</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill fill-emerald" style="width: 100%;"></div></div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                <span>Natural Language Processing (NLP)</span>
+                                <span style="font-weight: 700;">90% Match</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill fill-emerald" style="width: 90%;"></div></div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                <span>Docker & Scikit-Learn</span>
+                                <span style="font-weight: 700;">70% Match</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill fill-amber" style="width: 70%;"></div></div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                                <span>AWS Cloud Deployment</span>
+                                <span style="font-weight: 700;">40% Match</span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill fill-rose" style="width: 40%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 1. Live Statistics Section with Animated Counters -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                <div class="stat-number counter-val" data-target="125000" data-suffix="+">0</div>
+                <div class="stat-label">Resumes Processed</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-building"></i></div>
+                <div class="stat-number counter-val" data-target="1500" data-suffix="+">0</div>
+                <div class="stat-label">Companies Onboarded</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div>
+                <div class="stat-number counter-val" data-target="95" data-suffix="%">0</div>
+                <div class="stat-label">Matching Accuracy</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-bolt"></i></div>
+                <div class="stat-number">3 sec</div>
+                <div class="stat-label">Avg Screening Speed</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="stat-number counter-val" data-target="40" data-suffix="+">0</div>
+                <div class="stat-label">Technical Skills Taxonomy</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9. "How It Works" 5-Step Flowchart -->
+    <section style="padding: 80px 40px; background: var(--bg-dark);">
+        <div class="section-header">
+            <h2 class="section-title">How TalentPulse AI Works in 5 Simple Steps</h2>
+            <p class="section-subtitle">Automated recruitment intelligence from raw document upload to ranked shortlist</p>
+        </div>
+
+        <div class="steps-grid" style="max-width: 1100px; margin: 0 auto;">
+            <div class="step-card">
+                <div class="step-badge">1</div>
+                <h4 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 6px;">Upload Resume</h4>
+                <p style="font-size: 13px; color: var(--text-secondary);">Batch drag & drop PDF, DOCX, or TXT candidate resumes.</p>
+            </div>
+
+            <div class="step-card">
+                <div class="step-badge">2</div>
+                <h4 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 6px;">AI Reads Document</h4>
+                <p style="font-size: 13px; color: var(--text-secondary);">Parses contact info, degree levels, and experience timelines.</p>
+            </div>
+
+            <div class="step-card">
+                <div class="step-badge">3</div>
+                <h4 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 6px;">Skill Extraction</h4>
+                <p style="font-size: 13px; color: var(--text-secondary);">Extracts technical entities across 200+ skill taxonomies.</p>
+            </div>
+
+            <div class="step-card">
+                <div class="step-badge">4</div>
+                <h4 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 6px;">Resume Matching</h4>
+                <p style="font-size: 13px; color: var(--text-secondary);">Calculates TF-IDF vector similarity & Cosine distance.</p>
+            </div>
+
+            <div class="step-card">
+                <div class="step-badge">5</div>
+                <h4 style="font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 6px;">Candidate Ranking</h4>
+                <p style="font-size: 13px; color: var(--text-secondary);">Generates leaderboard rankings, radar charts, and reports.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Sample Dashboard Preview Gallery -->
+    <section style="padding: 80px 40px; max-width: 1200px; margin: 0 auto;">
+        <div class="section-header">
+            <h2 class="section-title">Explore Tailored Role Dashboards</h2>
+            <p class="section-subtitle">Customized interfaces built specifically for Recruiters, HR Managers, and Administrators</p>
+            
+            <div style="display: flex; justify-content: center; gap: 12px; margin-top: 24px;">
+                <button type="button" class="btn btn-primary dash-tab-btn" data-tab="tabRecruiter">💻 Recruiter Dashboard</button>
+                <button type="button" class="btn btn-secondary dash-tab-btn" data-tab="tabHR">👔 HR Executive Portal</button>
+                <button type="button" class="btn btn-secondary dash-tab-btn" data-tab="tabAdmin">🛡️ Admin Console</button>
+            </div>
+        </div>
+
+        <div id="tabRecruiter" class="dash-tab-view glass-card" style="padding: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-size: 18px; font-weight: 700; color: #0F172A;">Technical Recruiter Workbench</h3>
+                <span class="badge badge-tech">Recruiter View</span>
+            </div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+                Streamlined workflow to create job postings, drag & drop resumes, inspect skill gaps, and manage candidate hiring stages.
+            </p>
+            <div style="padding: 24px; background: var(--bg-card-hover); border-radius: var(--radius-md); border: 1px solid var(--border-glass); text-align: center;">
+                <i class="fa-solid fa-laptop-code" style="font-size: 48px; color: var(--primary); margin-bottom: 12px; display: block;"></i>
+                <div style="font-weight: 700; font-size: 16px; color: #0F172A;">Interactive Screener & Leaderboard Matrix</div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Supports instant CSV/JSON exports, match scores, and status updates.</div>
+            </div>
+        </div>
+
+        <div id="tabHR" class="dash-tab-view glass-card" style="padding: 32px; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-size: 18px; font-weight: 700; color: #0F172A;">HR Executive Portal</h3>
+                <span class="badge badge-strong">HR Manager View</span>
+            </div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+                High-level recruitment pipeline oversight, department metrics, candidate shortlist approvals, and hiring velocity.
+            </p>
+            <div style="padding: 24px; background: var(--bg-card-hover); border-radius: var(--radius-md); border: 1px solid var(--border-glass); text-align: center;">
+                <i class="fa-solid fa-user-tie" style="font-size: 48px; color: var(--emerald); margin-bottom: 12px; display: block;"></i>
+                <div style="font-weight: 700; font-size: 16px; color: #0F172A;">Pipeline Governance & Offer Approvals</div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Shortlisted candidate summaries, average fit scores, and department breakdown.</div>
+            </div>
+        </div>
+
+        <div id="tabAdmin" class="dash-tab-view glass-card" style="padding: 32px; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-size: 18px; font-weight: 700; color: #0F172A;">Administrator Governance Console</h3>
+                <span class="badge badge-tech" style="background: rgba(99, 102, 241, 0.1); color: var(--accent);">Admin View</span>
+            </div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+                Full platform control: Manage registered system accounts, reassign user roles, retrain ML models, and reset datasets.
+            </p>
+            <div style="padding: 24px; background: var(--bg-card-hover); border-radius: var(--radius-md); border: 1px solid var(--border-glass); text-align: center;">
+                <i class="fa-solid fa-shield-halved" style="font-size: 48px; color: var(--accent); margin-bottom: 12px; display: block;"></i>
+                <div style="font-weight: 700; font-size: 16px; color: #0F172A;">User Control & Model Retraining</div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Role management, audit logs, and Random Forest classifier retraining.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. AI Technologies Used Stack Grid -->
+    <section style="padding: 80px 40px; background: var(--bg-dark);">
+        <div class="section-header">
+            <h2 class="section-title">Powered by Modern AI & Machine Learning Stack</h2>
+            <p class="section-subtitle">Enterprise-grade technologies engineered for high-throughput resume parsing</p>
+        </div>
+
+        <div class="tech-grid">
+            <div class="tech-box"><i class="fa-brands fa-python" style="color: #3776AB; font-size: 24px; display: block; margin-bottom: 6px;"></i> Python 3.10</div>
+            <div class="tech-box"><i class="fa-solid fa-brain" style="color: #6366F1; font-size: 24px; display: block; margin-bottom: 6px;"></i> Scikit-Learn</div>
+            <div class="tech-box"><i class="fa-solid fa-vector-square" style="color: #0284C7; font-size: 24px; display: block; margin-bottom: 6px;"></i> TF-IDF NLP</div>
+            <div class="tech-box"><i class="fa-solid fa-file-pdf" style="color: #E11D48; font-size: 24px; display: block; margin-bottom: 6px;"></i> PyPDF2 / pdfplumber</div>
+            <div class="tech-box"><i class="fa-solid fa-server" style="color: #059669; font-size: 24px; display: block; margin-bottom: 6px;"></i> Flask Framework</div>
+            <div class="tech-box"><i class="fa-brands fa-docker" style="color: #2496ED; font-size: 24px; display: block; margin-bottom: 6px;"></i> Docker Container</div>
+            <div class="tech-box"><i class="fa-solid fa-database" style="color: #D97706; font-size: 24px; display: block; margin-bottom: 6px;"></i> SQLite / PostgreSQL</div>
+            <div class="tech-box"><i class="fa-solid fa-chart-simple" style="color: #FF6384; font-size: 24px; display: block; margin-bottom: 6px;"></i> Chart.js</div>
+        </div>
+    </section>
+
+    <!-- 11. Recruiter ROI Benefits -->
+    <section style="padding: 80px 40px; max-width: 1200px; margin: 0 auto;">
+        <div class="section-header">
+            <h2 class="section-title">Measurable ROI for Hiring Teams</h2>
+            <p class="section-subtitle">Transform your talent acquisition metrics with automated screening intelligence</p>
+        </div>
+
+        <div class="roi-grid">
+            <div class="roi-card">
+                <div class="roi-val">85%</div>
+                <h4 style="font-size: 18px; font-weight: 700; color: #0F172A; margin: 12px 0 6px 0;">Reduce Hiring Time</h4>
+                <p style="font-size: 13px; color: var(--text-secondary);">Cut candidate screening cycles from weeks to minutes.</p>
+            </div>
+
+            <div class="roi-card">
+                <div class="roi-val">3 sec</div>
+                <h4 style="font-size: 18px; font-weight: 700; color: #0F172A; margin: 12px 0 6px 0;">Resume Processing</h4>
+                <p style="font-size: 13px; color: var(--text-secondary);">Instant entity extraction and Cosine distance calculation.</p>
+            </div>
+
+            <div class="roi-card">
+                <div class="roi-val">95%</div>
+                <h4 style="font-size: 18px; font-weight: 700; color: #0F172A; margin: 12px 0 6px 0;">Hiring Precision</h4>
+                <p style="font-size: 13px; color: var(--text-secondary);">Objective weighted scoring eliminates human reviewer bias.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 15. Testimonials -->
+    <section style="padding: 80px 40px; background: var(--bg-dark);">
+        <div class="section-header">
+            <h2 class="section-title">Loved by Recruiters & Talent Leaders</h2>
+            <p class="section-subtitle">See what hiring managers say about TalentPulse AI</p>
+        </div>
+
+        <div class="testi-grid" style="max-width: 1100px; margin: 0 auto;">
+            <div class="testi-card">
+                <div class="testi-stars">★★★★★</div>
+                <div class="testi-text">"TalentPulse AI cut our resume review time by 75%. The TF-IDF skill match matrix helps us spot top software engineering talent instantly."</div>
+                <div class="testi-author">
+                    <div class="testi-avatar">SJ</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: #0F172A;">Sarah Jenkins</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Head of Talent Acquisition, TechCorp</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testi-card">
+                <div class="testi-stars">★★★★★</div>
+                <div class="testi-text">"The candidate leaderboard radar charts and missing skill breakdowns give our hiring managers complete clarity before interviews."</div>
+                <div class="testi-author">
+                    <div class="testi-avatar">MR</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: #0F172A;">Marcus Vance</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">Senior HR Lead, CloudScale Inc.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testi-card">
+                <div class="testi-stars">★★★★★</div>
+                <div class="testi-text">"Having role-based interfaces for recruiters, HR executives, and admins makes collaboration completely seamless for our entire team."</div>
+                <div class="testi-author">
+                    <div class="testi-avatar">EP</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 14px; color: #0F172A;">Elena Patel</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">VP of People & Culture, DataLabs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 16. SaaS Pricing Page Section -->
+    <section style="padding: 80px 40px; max-width: 1200px; margin: 0 auto;">
+        <div class="section-header">
+            <h2 class="section-title">Flexible Pricing Plans for Every Hiring Team</h2>
+            <p class="section-subtitle">Choose the right tier to scale your candidate screening pipeline</p>
+        </div>
+
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3 style="font-size: 20px; font-weight: 700; color: #0F172A;">Starter / Free</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">For students & individual recruiters</p>
+                <div class="pricing-price">$0 <span>/ month</span></div>
+                <ul style="list-style: none; margin: 20px 0; font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 10px;">
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Up to 50 Resumes / Mo</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Basic TF-IDF Skill Matching</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Single Recruiter Account</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> CSV Export Support</li>
+                </ul>
+                <a href="{{ url_for('register') }}" class="btn btn-secondary" style="margin-top: auto; width: 100%;">Get Started Free</a>
+            </div>
+
+            <div class="pricing-card featured">
+                <div class="pricing-badge">Most Popular</div>
+                <h3 style="font-size: 20px; font-weight: 700; color: #0F172A;">Pro Recruiter</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">For growing recruitment teams</p>
+                <div class="pricing-price">$49 <span>/ month</span></div>
+                <ul style="list-style: none; margin: 20px 0; font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 10px;">
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Unlimited Resume Screening</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Supervised ML Classifier</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Multi-Factor Radar Profiles</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> 1-Click Job Templates</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Candidate Email Invites</li>
+                </ul>
+                <a href="{{ url_for('register') }}" class="btn btn-primary" style="margin-top: auto; width: 100%;">Start Pro Trial</a>
+            </div>
+
+            <div class="pricing-card">
+                <h3 style="font-size: 20px; font-weight: 700; color: #0F172A;">Enterprise HR</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">For large HR departments</p>
+                <div class="pricing-price">$199 <span>/ month</span></div>
+                <ul style="list-style: none; margin: 20px 0; font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 10px;">
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Role-Based Access (3 Roles)</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Model Retraining Console</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Dedicated Account Manager</li>
+                    <li><i class="fa-solid fa-check" style="color: var(--emerald);"></i> Docker & On-Prem Deployment</li>
+                </ul>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('bookDemoBtn').click()" style="margin-top: auto; width: 100%;">Contact Sales</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 17. FAQ Section -->
+    <section style="padding: 80px 40px; background: var(--bg-dark);">
+        <div class="section-header">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <p class="section-subtitle">Everything you need to know about TalentPulse AI</p>
+        </div>
+
+        <div class="faq-container">
+            <div class="faq-item active">
+                <div class="faq-question">
+                    <span>Does it support PDF, DOCX, and TXT resume files?</span>
+                    <i class="fa-solid fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes! TalentPulse AI includes a multi-format parsing engine built on PyPDF2, pdfplumber, and python-docx to extract text, contact info, degrees, and technical skills seamlessly across all major document formats.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>How does the AI candidate match scoring algorithm work?</span>
+                    <i class="fa-solid fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    Our match score utilizes a multi-factor weighted matrix: 40% TF-IDF Cosine Vector Similarity + 30% Skill Coverage Match + 20% Experience Timeline Alignment + 10% Required Education Alignment.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Can multiple recruiters collaborate with different access roles?</span>
+                    <i class="fa-solid fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    Absolutely. TalentPulse AI features Role-Based Access Control (RBAC) supporting 3 distinct roles: Technical Recruiter, HR Manager, and Administrator, each with tailored navigation menus and permissions.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Is my candidate resume data kept private and secure?</span>
+                    <i class="fa-solid fa-chevron-down faq-icon"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes. All candidate records are stored in an encrypted database with password hashing and session authorization. Data is never shared or used to train public external LLMs.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Demo Video Modal -->
+    <div class="modal-overlay" id="videoModal">
+        <div class="modal-card">
+            <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="font-size: 20px; font-weight: 700; color: #0F172A; margin-bottom: 16px;">
+                <i class="fa-solid fa-circle-play" style="color: var(--primary);"></i> TalentPulse AI Platform Overview
+            </h3>
+            <div style="aspect-ratio: 16/9; background: #0F172A; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: #FFF; text-align: center; padding: 20px;">
+                <div>
+                    <i class="fa-solid fa-play" style="font-size: 48px; color: var(--primary); margin-bottom: 12px; display: block; cursor: pointer;"></i>
+                    <h4 style="font-size: 16px; font-weight: 600;">Interactive Demo Video Stream</h4>
+                    <p style="font-size: 13px; color: #94A3B8; margin-top: 4px;">Demonstrating resume parsing, candidate leaderboards, and ML analytics.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Demo Modal -->
+    <div class="modal-overlay" id="bookModal">
+        <div class="modal-card" style="max-width: 480px;">
+            <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="font-size: 20px; font-weight: 700; color: #0F172A; margin-bottom: 6px;">Book a TalentPulse AI Demo</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Schedule a 1-on-1 walkthrough with our talent solutions team.</p>
+
+            <form onsubmit="alert('Thank you! Our team will contact you shortly.'); return false;">
+                <div class="form-group">
+                    <label>Work Email</label>
+                    <input type="email" class="form-control" placeholder="name@company.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" class="form-control" placeholder="e.g. Acme Corp" required>
+                </div>
+                <div class="form-group">
+                    <label>Team Size</label>
+                    <select class="form-control">
+                        <option>1-10 Recruiters</option>
+                        <option>11-50 Recruiters</option>
+                        <option>50+ Enterprise HR</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Confirm Booking Request</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 20. Comprehensive Landing Footer -->
+    <footer class="landing-footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <div class="sidebar-logo" style="padding: 0; border: none; margin-bottom: 14px;">
+                    <div class="logo-icon" style="width: 32px; height: 32px; font-size: 16px;">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h2 style="font-size: 16px;">TalentPulse <span style="color: var(--primary);">AI</span></h2>
+                    </div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                    Enterprise AI Resume Screening & Talent Intelligence Platform powered by Machine Learning.
+                </p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Product</h4>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('register') }}">Resume Screener</a></li>
+                    <li><a href="{{ url_for('register') }}">Candidate Leaderboard</a></li>
+                    <li><a href="{{ url_for('register') }}">Job Workbench</a></li>
+                    <li><a href="{{ url_for('register') }}">ML Analytics</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Resources & Docs</h4>
+                <ul class="footer-links">
+                    <li><a href="#">API Documentation</a></li>
+                    <li><a href="#">Python ML Architecture</a></li>
+                    <li><a href="#">TF-IDF Vector Specs</a></li>
+                    <li><a href="#">Deployment Guide</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Legal & Contact</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="https://github.com" target="_blank"><i class="fa-brands fa-github"></i> GitHub Repo</a></li>
+                    <li><a href="https://linkedin.com" target="_blank"><i class="fa-brands fa-linkedin"></i> LinkedIn</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-glass); padding-top: 24px; text-align: center; font-size: 13px; color: var(--text-muted);">
+            © 2026 TalentPulse AI - Resume Intelligence & Candidate Ranking System. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

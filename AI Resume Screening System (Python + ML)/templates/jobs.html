@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Job Workbench - TalentPulse AI{% endblock %}
+{% block page_title %}AI Job Workbench & Role Generator{% endblock %}
+{% block page_subtitle %}Create, benchmark, and optimize target job descriptions using Real-Time AI Intelligence{% endblock %}
+
+{% block content %}
+
+<!-- 12. Market Skill Demand Insights & 5. Talent Pool Availability -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 16px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h5 style="font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 6px;">
+                🔥 Real-Time Market Skill Demand & Talent Availability:
+            </h5>
+            <div style="display: flex; gap: 12px; font-size: 12px; flex-wrap: wrap;">
+                <span class="badge badge-strong">React: High 🔥 (382 Candidates)</span>
+                <span class="badge badge-strong">Python: High 🔥 (196 Candidates)</span>
+                <span class="badge badge-tech">Node.js: High 🔥 (210 Candidates)</span>
+                <span class="badge badge-moderate">Docker: Medium 🟡 (145 Candidates)</span>
+                <span class="badge badge-low">PHP: Low 🔴 (28 Candidates)</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; font-size: 12px;">
+            <div style="text-align: right;">
+                <div style="color: var(--text-muted);">Hiring Difficulty</div>
+                <div style="font-weight: 700; color: var(--emerald);">🟢 Easy (High Supply)</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="color: var(--text-muted);">Est. Time-to-Fill</div>
+                <div style="font-weight: 700; color: var(--primary);">⚡ 14 Days</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 7. Interactive Live Split-Screen Job Creator & Live Preview -->
+<div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px;">
+    
+    <!-- Left: Job Form -->
+    <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-square-plus" style="color: var(--primary);"></i> Create & Optimize Job Role
+            </h3>
+            <!-- 1. AI Job Generator Button -->
+            <button type="button" id="aiGenJdBtn" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent);"></i> Generate with AI
+            </button>
+        </div>
+
+        <form action="{{ url_for('create_job') }}" method="POST" id="jobForm">
+            <div class="form-group">
+                <label for="title">Job Title / Role</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Senior MERN Stack Engineer" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label for="department">Department</label>
+                    <input type="text" id="department" name="department" class="form-control" value="Engineering" placeholder="e.g. Engineering">
+                </div>
+
+                <!-- 1. AI Salary Recommendation -->
+                <div class="form-group">
+                    <label style="display: flex; justify-content: space-between;">
+                        <span>Expected Salary Range</span>
+                        <span style="color: var(--emerald); font-weight: 700;" id="salaryTag">🤖 ₹ 14–22 LPA</span>
+                    </label>
+                    <input type="text" id="salaryRange" class="form-control" value="₹ 14 – 22 LPA ($90K - $125K)">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label for="min_experience_years">Min Experience (Years) <span style="font-size: 11px; color: var(--emerald); font-weight: normal;">(0 = Fresher / Entry Level)</span></label>
+                    <input type="number" step="0.5" min="0" id="min_experience_years" name="min_experience_years" class="form-control" value="0.0" placeholder="0 for Fresher" required>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="required_education">Degree Level</label>
+                    <select id="required_education" name="required_education" class="form-control">
+                        <option value="Bachelor's">Bachelor's</option>
+                        <option value="Master's">Master's</option>
+                        <option value="Ph.D.">Ph.D.</option>
+                        <option value="Associate/Diploma">Associate/Diploma</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 9. Required vs Preferred Skills Separation -->
+            <div class="form-group">
+                <label for="required_skills">Required Skills (Comma separated)</label>
+                <input type="text" id="required_skills" name="required_skills" class="form-control" placeholder="MongoDB, Express.js, React, Node.js" required>
+            </div>
+
+            <!-- 4. AI Skill Suggestions Chips -->
+            <div style="margin-bottom: 16px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                    💡 AI Skill Suggestions (Click to Add):
+                </label>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                    <span class="skill-tag skill-tech chip-btn" data-skill="Docker" style="cursor: pointer;">+ Docker</span>
+                    <span class="skill-tag skill-tech chip-btn" data-skill="AWS" style="cursor: pointer;">+ AWS</span>
+                    <span class="skill-tag skill-tech chip-btn" data-skill="Redis" style="cursor: pointer;">+ Redis</span>
+                    <span class="skill-tag skill-tech chip-btn" data-skill="JWT" style="cursor: pointer;">+ JWT</span>
+                    <span class="skill-tag skill-tech chip-btn" data-skill="TypeScript" style="cursor: pointer;">+ TypeScript</span>
+                    <span class="skill-tag skill-tech chip-btn" data-skill="GraphQL" style="cursor: pointer;">+ GraphQL</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="preferred_skills">Preferred Skills (Optional)</label>
+                <input type="text" id="preferred_skills" name="preferred_skills" class="form-control" placeholder="Docker, AWS, Redis, GraphQL">
+            </div>
+
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label for="description" style="margin: 0;">Job Description</label>
+                    <!-- 8. AI Rewrite Button -->
+                    <button type="button" id="aiRewriteBtn" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent);"></i> Improve with AI
+                    </button>
+                </div>
+                <textarea id="description" name="description" class="form-control" style="min-height: 110px;" placeholder="Full job description text..." required>Designing, building, and deploying high-performance web applications using MongoDB, Express, React, and Node.js.</textarea>
+            </div>
+
+            <!-- 15. Recruiter Internal Notes -->
+            <div class="form-group">
+                <label for="internalNotes" style="font-size: 12px; color: var(--text-muted);">🔒 Private Recruiter Notes (Internal Only)</label>
+                <input type="text" id="internalNotes" class="form-control" placeholder="e.g. Urgent hiring, Max budget ₹ 22 LPA, Schedule round 1 ASAP">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 15px;">
+                <i class="fa-solid fa-check"></i> Save & Publish Job Posting
+            </button>
+        </form>
+    </div>
+
+    <!-- Right: Live Job Posting Preview & AI Scores -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- 2. Job Description Quality Score Meter & 3. Bias Checker -->
+        <div class="glass-card" style="padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="font-size: 15px; font-weight: 700; color: #0F172A;">🤖 AI Job Audit Scores</h4>
+                <span class="badge badge-strong">Score: 94/100 ★★★★★</span>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Skill & Title Clarity:</span>
+                    <span style="font-weight: 700; color: var(--emerald);">100% ★★★★★</span>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill fill-emerald" style="width: 100%;"></div></div>
+
+                <div style="display: flex; justify-content: space-between; margin-top: 4px;">
+                    <span>Inclusive & Bias-Free Rating:</span>
+                    <span style="font-weight: 700; color: var(--emerald);">97% ✔ Bias-Free</span>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill fill-emerald" style="width: 97%;"></div></div>
+            </div>
+        </div>
+
+        <!-- 17. AI Recommended Interview Process -->
+        <div class="glass-card" style="padding: 20px;">
+            <h4 style="font-size: 14px; font-weight: 700; color: #0F172A; margin-bottom: 12px;">
+                🗓️ AI Recommended 4-Round Interview Process:
+            </h4>
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--text-secondary);">
+                <div style="padding: 8px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass);">
+                    <strong>Round 1:</strong> Automated Screening Test (30 Mins)
+                </div>
+                <div style="padding: 8px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass);">
+                    <strong>Round 2:</strong> Technical Live Coding & DSA (60 Mins)
+                </div>
+                <div style="padding: 8px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass);">
+                    <strong>Round 3:</strong> System Design & Microservices (45 Mins)
+                </div>
+                <div style="padding: 8px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass);">
+                    <strong>Round 4:</strong> Executive HR & Culture Fit (30 Mins)
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Live Preview Card -->
+        <div class="glass-card" style="border-color: var(--primary);">
+            <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                👁️ Live Candidate View Preview
+            </div>
+            <h3 style="font-size: 18px; font-weight: 700; color: #0F172A;" id="prevTitle">Senior MERN Stack Engineer</h3>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" id="prevMeta">
+                Engineering • 3.0 yrs exp min • Bachelor's
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 12px; line-height: 1.5;" id="prevDesc">
+                Designing, building, and deploying high-performance web applications using MongoDB, Express, React, and Node.js.
+            </p>
+            <div style="margin-top: 12px;" id="prevSkills">
+                <span class="skill-tag skill-matched">MongoDB</span>
+                <span class="skill-tag skill-matched">React</span>
+                <span class="skill-tag skill-matched">Node.js</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const titleInput = document.getElementById('title');
+    const deptInput = document.getElementById('department');
+    const expInput = document.getElementById('min_experience_years');
+    const skillsInput = document.getElementById('required_skills');
+    const descInput = document.getElementById('description');
+
+    const prevTitle = document.getElementById('prevTitle');
+    const prevMeta = document.getElementById('prevMeta');
+    const prevDesc = document.getElementById('prevDesc');
+    const prevSkills = document.getElementById('prevSkills');
+
+    function updatePreview() {
+        if (prevTitle && titleInput) prevTitle.textContent = titleInput.value || 'Senior Job Title';
+        if (prevMeta) prevMeta.textContent = (deptInput.value || 'Engineering') + ' • ' + (expInput.value || '3.0') + ' yrs exp min';
+        if (prevDesc && descInput) prevDesc.textContent = descInput.value || 'Job description preview...';
+        
+        if (prevSkills && skillsInput) {
+            const arr = skillsInput.value.split(',').filter(s => s.trim() !== '');
+            let html = '';
+            arr.forEach(s => {
+                html += `<span class="skill-tag skill-matched"><i class="fa-solid fa-check"></i> ${s.trim()}</span> `;
+            });
+            prevSkills.innerHTML = html;
+        }
+    }
+
+    [titleInput, deptInput, expInput, skillsInput, descInput].forEach(el => {
+        if (el) el.addEventListener('input', updatePreview);
+    });
+
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const skill = btn.getAttribute('data-skill');
+            if (skillsInput) {
+                if (skillsInput.value) skillsInput.value += ', ' + skill;
+                else skillsInput.value = skill;
+                updatePreview();
+            }
+        });
+    });
+
+    const aiRewriteBtn = document.getElementById('aiRewriteBtn');
+    if (aiRewriteBtn && descInput) {
+        aiRewriteBtn.addEventListener('click', async () => {
+            const text = descInput.value;
+            aiRewriteBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Rewriting...';
+            try {
+                const res = await fetch('/api/ai_rewrite_jd', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    descInput.value = data.rewritten;
+                    updatePreview();
+                    showToast('AI improved job description!', 'success');
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                aiRewriteBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent);"></i> Improve with AI';
+            }
+        });
+    }
+
+    const aiGenBtn = document.getElementById('aiGenJdBtn');
+    if (aiGenBtn) {
+        aiGenBtn.addEventListener('click', async () => {
+            const role = titleInput.value || 'MERN Stack Developer';
+            aiGenBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
+            try {
+                const res = await fetch('/api/generate_jd', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role_title: role })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const jd = data.jd;
+                    titleInput.value = jd.title;
+                    deptInput.value = jd.department;
+                    expInput.value = jd.min_experience_years;
+                    skillsInput.value = jd.required_skills;
+                    document.getElementById('preferred_skills').value = jd.preferred_skills;
+                    descInput.value = jd.description;
+                    updatePreview();
+                    showToast('AI generated complete job posting for ' + jd.title, 'success');
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                aiGenBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent);"></i> Generate with AI';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

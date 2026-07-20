@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}{{ result.candidate_name }} - AI Candidate Profile{% endblock %}
+{% block page_title %}{{ result.candidate_name }} - Candidate Analysis{% endblock %}
+{% block page_subtitle %}Detailed AI Fit Score Matrix, Skill Gap Analysis & Resume Document Preview{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+    <a href="{{ url_for('leaderboard') }}" style="color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;">
+        <i class="fa-solid fa-arrow-left"></i> Back to Leaderboard
+    </a>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <!-- 17. AI Technical Interview Questions Generator Button -->
+        <button type="button" id="genQuestionsBtn" class="btn btn-secondary" style="font-size: 13px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent);"></i> Generate Interview Questions
+        </button>
+
+        {% if candidate.email %}
+        <a href="mailto:{{ candidate.email }}?subject=Interview%20Invitation%20for%20{{ result.job_title }}&body=Hi%20{{ result.candidate_name }},%0A%0AWe%20reviewed%20your%20resume%20for%20the%20{{ result.job_title }}%20position%20and%20would%20like%20to%20invite%20you%20for%20an%20interview.%0A%0ABest%20regards,%0AHiring%20Team" class="btn btn-secondary" style="font-size: 13px;">
+            <i class="fa-solid fa-envelope" style="color: var(--primary);"></i> Send Invite
+        </a>
+        {% endif %}
+
+        {% if candidate.file_name %}
+        <a href="{{ url_for('download_file', filename=candidate.file_name) }}" class="btn btn-primary" style="font-size: 13px;">
+            <i class="fa-solid fa-download"></i> Download Resume
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- AI Generated Questions Modal -->
+<div class="modal-overlay" id="questionsModal">
+    <div class="modal-card">
+        <button class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+        <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 12px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent);"></i> AI Tailored Interview Questions
+        </h3>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+            Resume-specific technical interview questions for <strong>{{ result.candidate_name }}</strong>:
+        </p>
+        <ul id="questionsList" style="list-style: none; font-size: 13px; color: var(--text-primary); display: flex; flex-direction: column; gap: 12px;">
+            <li>Loading custom questions...</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Top Profile Header -->
+<div class="glass-card" style="margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <h2 style="font-size: 24px; font-weight: 700; color: #0F172A;">{{ result.candidate_name }}</h2>
+                <span class="badge badge-tech">{{ candidate.predicted_category }}</span>
+                <span class="badge {% if result.ai_recommendation == 'Strong Match' %}badge-strong{% elif result.ai_recommendation == 'Moderate Match' %}badge-moderate{% else %}badge-low{% endif %}">
+                    {{ result.ai_recommendation }}
+                </span>
+            </div>
+            
+            <div style="display: flex; gap: 16px; margin-top: 12px; font-size: 13px; color: var(--text-secondary); flex-wrap: wrap;">
+                {% if candidate.email %}<span><i class="fa-solid fa-envelope"></i> {{ candidate.email }}</span>{% endif %}
+                {% if candidate.phone %}<span><i class="fa-solid fa-phone"></i> {{ candidate.phone }}</span>{% endif %}
+                {% if candidate.linkedin %}<a href="{{ candidate.linkedin }}" target="_blank" style="color: var(--primary); text-decoration: none;"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>{% endif %}
+                {% if candidate.github %}<a href="{{ candidate.github }}" target="_blank" style="color: var(--primary); text-decoration: none;"><i class="fa-brands fa-github"></i> GitHub</a>{% endif %}
+                <span><i class="fa-solid fa-graduation-cap"></i> {{ candidate.education_level }}</span>
+                <span><i class="fa-solid fa-clock"></i> {{ candidate.experience_years }} Years Exp</span>
+            </div>
+        </div>
+
+        <div style="text-align: right;">
+            <div style="font-size: 12px; color: var(--text-muted);">Overall Fit Score</div>
+            <div style="font-size: 36px; font-weight: 800; color: {% if result.overall_score >= 75 %}#059669{% elif result.overall_score >= 55 %}#D97706{% else %}#E11D48{% endif %};">
+                {{ result.overall_score }}%
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <!-- Multi-Factor Score Breakdown Matrix -->
+    <div class="glass-card">
+        <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 20px;">Score Breakdown Matrix</h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #0F172A;">
+                    <span>Semantic Vector Similarity (40% Weight)</span>
+                    <span style="font-weight: 700;">{{ result.similarity_score }}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-cyan" style="width: {{ result.similarity_score }}%;"></div>
+                </div>
+            </div>
+
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #0F172A;">
+                    <span>Skill Coverage Match (30% Weight)</span>
+                    <span style="font-weight: 700;">{{ result.skill_score }}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-emerald" style="width: {{ result.skill_score }}%;"></div>
+                </div>
+            </div>
+
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #0F172A;">
+                    <span>Experience Fit Score (20% Weight)</span>
+                    <span style="font-weight: 700;">{{ result.experience_score }}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-amber" style="width: {{ result.experience_score }}%;"></div>
+                </div>
+            </div>
+
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #0F172A;">
+                    <span>Education Alignment (10% Weight)</span>
+                    <span style="font-weight: 700;">{{ result.education_score }}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill fill-rose" style="width: {{ result.education_score }}%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; height: 200px; position: relative;">
+            <canvas id="scoreRadarChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 6. AI Explainability & Score Transparency Breakdown -->
+    <div class="glass-card">
+        <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 16px;">AI Decision Transparency & Skill Gap</h3>
+
+        <div style="margin-bottom: 20px;">
+            <h5 style="font-size: 13px; font-weight: 600; color: var(--emerald); margin-bottom: 8px;">
+                ✅ Matched Skills ({{ result.matched_skills | length }})
+            </h5>
+            <div>
+                {% for skill in result.matched_skills %}
+                <span class="skill-tag skill-matched"><i class="fa-solid fa-check"></i> {{ skill }}</span>
+                {% else %}
+                <span style="font-size: 12px; color: var(--text-muted);">No exact required skills matched.</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <h5 style="font-size: 13px; font-weight: 600; color: var(--rose); margin-bottom: 8px;">
+                ❌ Missing Critical Skills ({{ result.missing_skills | length }})
+            </h5>
+            <div>
+                {% for skill in result.missing_skills %}
+                <span class="skill-tag skill-missing"><i class="fa-solid fa-xmark"></i> {{ skill }}</span>
+                {% else %}
+                <span style="font-size: 12px; color: var(--emerald);">All required skills are present!</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 8. AI Executive Summary -->
+        <div style="padding: 16px; background: var(--bg-card-hover); border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+            <h5 style="font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-robot" style="color: var(--primary);"></i> Executive AI Candidate Summary
+            </h5>
+            <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; white-space: pre-line;">
+                {{ result.ai_feedback }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Raw Parsed Resume Viewer -->
+<div class="glass-card">
+    <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <span>Parsed Resume Document Text</span>
+        <span style="font-size: 12px; color: var(--text-muted); font-weight: normal;">Source file: {{ candidate.file_name }}</span>
+    </h3>
+    <pre style="background: var(--bg-card-hover); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 20px; font-family: monospace; font-size: 13px; color: var(--text-primary); max-height: 350px; overflow-y: auto; white-space: pre-wrap;">{{ candidate.raw_text }}</pre>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('scoreRadarChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Semantic Similarity', 'Skill Match', 'Experience Fit', 'Education'],
+            datasets: [{
+                label: 'Candidate Match Profile',
+                data: [
+                    {{ result.similarity_score }},
+                    {{ result.skill_score }},
+                    {{ result.experience_score }},
+                    {{ result.education_score }}
+                ],
+                backgroundColor: 'rgba(2, 132, 199, 0.15)',
+                borderColor: '#0284C7',
+                borderWidth: 2,
+                pointBackgroundColor: '#0284C7'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: '#E2E8F0' },
+                    grid: { color: '#E2E8F0' },
+                    pointLabels: { color: '#475569', font: { size: 11, weight: '600' } },
+                    ticks: { display: false, min: 0, max: 100 }
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    const genBtn = document.getElementById('genQuestionsBtn');
+    const modal = document.getElementById('questionsModal');
+    const list = document.getElementById('questionsList');
+
+    if (genBtn && modal && list) {
+        genBtn.addEventListener('click', async () => {
+            modal.classList.add('active');
+            list.innerHTML = '<li>⌛ Generating custom technical questions based on resume skills...</li>';
+            
+            try {
+                const res = await fetch('/api/generate_questions/{{ result.id }}');
+                const data = await res.json();
+                
+                let html = '';
+                data.questions.forEach(q => {
+                    html += `<li style="padding: 10px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass);">${q}</li>`;
+                });
+                list.innerHTML = html;
+            } catch (e) {
+                list.innerHTML = '<li style="color: var(--rose);">Failed to generate questions.</li>';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

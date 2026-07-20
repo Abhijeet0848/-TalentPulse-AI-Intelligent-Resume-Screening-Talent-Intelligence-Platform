@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Screen Resumes - TalentPulse AI{% endblock %}
+{% block page_title %}Resume Screening & Batch Processing{% endblock %}
+{% block page_subtitle %}Upload candidate resumes to evaluate against selected job requirements using ML{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    
+    <!-- 16. Processing Pipeline Visualization Diagram -->
+    <div class="glass-card" style="margin-bottom: 24px; padding: 16px 20px;">
+        <h5 style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+            ⚡ AI Pipeline Architecture Flowchart:
+        </h5>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 11px; font-weight: 600; text-align: center; color: var(--text-secondary);">
+            <div style="padding: 6px 12px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass);">1. PDF Upload</div>
+            <span>➔</span>
+            <div style="padding: 6px 12px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass);">2. Text Parsing</div>
+            <span>➔</span>
+            <div style="padding: 6px 12px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass);">3. Skill Extraction</div>
+            <span>➔</span>
+            <div style="padding: 6px 12px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass);">4. TF-IDF Cosine</div>
+            <span>➔</span>
+            <div style="padding: 6px 12px; background: var(--bg-card-hover); border-radius: 6px; border: 1px solid var(--border-glass); color: var(--emerald);">5. Weighted Rank</div>
+        </div>
+      {% if session.get('user_role') in ['Recruiter', 'HR Manager', 'Admin'] %}
+    <!-- Quick Create Custom Job Form (Recruiters Only) -->
+    <div class="glass-card" style="margin-bottom: 24px; border-color: rgba(2, 132, 199, 0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" id="toggleJobFormBtn">
+            <h4 style="font-size: 16px; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i> 
+                <span>Create Target Job Role</span>
+            </h4>
+            <span style="font-size: 12px; color: var(--primary); font-weight: 600;" id="toggleJobFormText">
+                {% if not jobs %}⚡ Type Custom Job or Click Suggestions{% else %}➕ Add Another Role{% endif %}
+            </span>
+        </div>
+
+        <form action="{{ url_for('create_job') }}" method="POST" id="customJobForm" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-glass); {% if jobs %}display: none;{% endif %}">
+            <div style="margin-bottom: 16px;">
+                <label style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block;">
+                    ⚡ Quick Target Role Suggestions (Click to Autofill):
+                </label>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <button type="button" class="btn btn-secondary cand-template-btn" 
+                            data-title="Full Stack Software Engineer" 
+                            data-exp="2.0" 
+                            data-req="Python, React, Node.js, SQL, REST API, Git" 
+                            data-desc="Developing responsive web applications, backend APIs, database integration, and CI/CD deployment.">
+                        ⚡ Full Stack Developer
+                    </button>
+                    <button type="button" class="btn btn-secondary cand-template-btn" 
+                            data-title="Python Backend Developer" 
+                            data-exp="2.0" 
+                            data-req="Python, Django, FastAPI, PostgreSQL, Docker, Git" 
+                            data-desc="Designing scalable RESTful APIs, database schema design, and microservices architecture.">
+                        🐍 Python Developer
+                    </button>
+                    <button type="button" class="btn btn-secondary cand-template-btn" 
+                            data-title="Data Scientist & AI Engineer" 
+                            data-exp="3.0" 
+                            data-req="Python, Machine Learning, PyTorch, Pandas, Scikit-Learn, SQL" 
+                            data-desc="Building predictive machine learning models, statistical analysis, and NLP text processing.">
+                        🤖 Data Scientist
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label for="title" style="font-size: 12px;">Job Title / Type of Job</label>
+                    <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Full Stack Developer, Marketing Lead..." required>
+                </div>
+                <div class="form-group">
+                    <label for="min_experience_years" style="font-size: 12px;">Min Experience (Yrs)</label>
+                    <input type="number" step="0.5" id="min_experience_years" name="min_experience_years" class="form-control" value="2.0" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="required_skills" style="font-size: 12px;">Required Skills (Comma-separated)</label>
+                <input type="text" id="required_skills" name="required_skills" class="form-control" placeholder="e.g. Python, SQL, React, Communication..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="description" style="font-size: 12px;">Job Description / Overview</label>
+                <textarea id="description" name="description" class="form-control" style="min-height: 70px;" placeholder="Brief description of responsibilities..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 13px;">
+                <i class="fa-solid fa-check"></i> Save & Select Target Job Role
+            </button>
+    </div>
+    {% endif %}
+
+
+    <!-- Resume Screening Form -->
+    <div class="glass-card">
+        <form action="{{ url_for('upload_resume') }}" method="POST" enctype="multipart/form-data">
+            
+            <!-- Step 1: Select Job Posting -->
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="job_id" style="font-size: 14px; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;">1</span>
+                    Select Target Job Role
+                </label>
+
+                {% if jobs %}
+                <select id="job_id" name="job_id" class="form-control" style="font-size: 15px; padding: 14px;" required>
+                    {% for job in jobs %}
+                    <option value="{{ job.id }}" {% if selected_job_id == job.id %}selected{% endif %}>
+                        🎯 {{ job.title }} ({{ job.department }} | {{ job.min_experience_years }} yrs min exp)
+                    </option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <div style="padding: 12px 16px; background: #F8FAFC; border-radius: var(--radius-md); color: var(--text-muted); font-size: 13px; border: 1px solid var(--border-glass);">
+                    ⚠️ No target job role selected yet. Use the form above to type your job title or click a quick suggestion button!
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 8. AI Screening Threshold Settings -->
+            <div style="margin-bottom: 24px; padding: 16px; background: var(--bg-card-hover); border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                <label style="font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 10px; display: block;">
+                    ⚙️ Configurable AI Screening Settings:
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-muted);">Minimum Fit Threshold %</label>
+                        <select class="form-control" style="font-size: 12px; padding: 6px 10px;">
+                            <option value="60">60% (Moderate Match)</option>
+                            <option value="75" selected>75% (Strong Match)</option>
+                            <option value="85">85% (High Precision)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-muted);">Minimum Experience Filter</label>
+                        <select class="form-control" style="font-size: 12px; padding: 6px 10px;">
+                            <option value="0">0 Years / Fresher (Entry Level)</option>
+                            <option value="1">1+ Years</option>
+                            <option value="3" selected>3+ Years</option>
+                            <option value="5">5+ Years</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Step 2: Upload Resumes -->
+            <div class="form-group">
+                <label style="font-size: 14px; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #FFF; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;">2</span>
+                    Upload Candidate Resumes (PDF, DOCX, TXT)
+                </label>
+
+                <div class="dropzone" id="dropzone">
+                    <div class="dropzone-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h4 style="font-size: 16px; font-weight: 600; color: #0F172A; margin-bottom: 6px;">
+                        Drag & drop resumes here, or <span style="color: var(--primary); text-decoration: underline;">Browse Files</span>
+                    </h4>
+                    <p style="font-size: 13px; color: var(--text-secondary);">
+                        Supports single or batch file uploads (.pdf, .docx, .txt)
+                    </p>
+                    <input type="file" id="fileInput" name="resume_files" multiple accept=".pdf,.docx,.doc,.txt" style="display: none;">
+                </div>
+
+                <div id="fileListPreview"></div>
+            </div>
+
+            <div style="margin-top: 32px;">
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 15px;" {% if not jobs %}disabled{% endif %}>
+                    <i class="fa-solid fa-bolt"></i> Run AI Resume Screening
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('toggleJobFormBtn');
+    const form = document.getElementById('customJobForm');
+    
+    if (toggleBtn && form) {
+        toggleBtn.addEventListener('click', () => {
+            form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
+        });
+    }
+
+    document.querySelectorAll('.cand-template-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('title').value = btn.getAttribute('data-title');
+            document.getElementById('min_experience_years').value = btn.getAttribute('data-exp');
+            document.getElementById('required_skills').value = btn.getAttribute('data-req');
+            document.getElementById('description').value = btn.getAttribute('data-desc');
+            showToast('Loaded target role template: ' + btn.getAttribute('data-title'), 'info');
+        });
+    });
+});
+</script>
+{% endblock %}
+

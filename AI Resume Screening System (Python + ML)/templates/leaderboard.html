@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Leaderboard - TalentPulse AI{% endblock %}
+{% block page_title %}Candidate Ranking & Screening Matrix{% endblock %}
+{% block page_subtitle %}Multi-factor ML fit scores, skill coverage, and candidate recruitment status{% endblock %}
+
+{% block content %}
+
+<!-- 1. Sliding Right-Side Candidate Profile Drawer -->
+<div class="drawer-backdrop" id="candidateDrawer">
+    <div class="drawer-panel">
+        <button class="drawer-close-btn" id="closeDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
+
+        <div style="margin-bottom: 20px;">
+            <span class="badge badge-tech" id="drawerCat">Category</span>
+            <h2 style="font-size: 22px; font-weight: 800; color: #0F172A; margin-top: 6px;" id="drawerName">Candidate Name</h2>
+            <div style="font-size: 13px; color: var(--text-secondary);" id="drawerJob">Target Job Title</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+            <div style="padding: 12px; background: var(--bg-card-hover); border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                <div style="font-size: 11px; color: var(--text-muted);">Overall Fit Score</div>
+                <div style="font-size: 26px; font-weight: 800; color: var(--primary);" id="drawerScore">92%</div>
+            </div>
+            <div style="padding: 12px; background: var(--bg-card-hover); border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+                <div style="font-size: 11px; color: var(--text-muted);">Experience Timeline</div>
+                <div style="font-size: 22px; font-weight: 700; color: #0F172A;" id="drawerExp">4 Yrs</div>
+            </div>
+        </div>
+
+        <!-- 2. AI Explainability Score Reasons -->
+        <div style="margin-bottom: 20px; padding: 16px; background: var(--bg-card-hover); border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+            <h4 style="font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-robot" style="color: var(--primary);"></i> AI Decision Transparency:
+            </h4>
+            <div id="drawerExplain" style="font-size: 12px; display: flex; flex-direction: column; gap: 4px;">
+                <span>✔ Primary tech stack matched</span>
+            </div>
+        </div>
+
+        <!-- 4. Interactive Radar Chart -->
+        <div style="height: 180px; position: relative; margin-bottom: 20px;">
+            <canvas id="drawerRadarChart"></canvas>
+        </div>
+
+        <!-- 10. Recruiter Private Notes Editor -->
+        <div style="margin-bottom: 20px;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; display: block;">
+                📝 Recruiter Internal Notes:
+            </label>
+            <textarea id="drawerNotes" class="form-control" style="min-height: 70px; font-size: 12px;" placeholder="Add private interviewer notes..."></textarea>
+            <button id="saveNotesBtn" class="btn btn-secondary" style="margin-top: 6px; font-size: 11px; padding: 4px 10px;">Save Notes</button>
+        </div>
+
+        <!-- Action CTAs -->
+        <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
+            <a id="drawerInviteBtn" href="#" class="btn btn-primary" style="width: 100%; font-size: 13px;">
+                <i class="fa-solid fa-envelope"></i> Send Interview Invite
+            </a>
+            <a id="drawerDownloadBtn" href="#" class="btn btn-secondary" style="width: 100%; font-size: 13px;">
+                <i class="fa-solid fa-download"></i> Download Resume File
+            </a>
+            <a id="drawerFullProfileLink" href="#" class="btn btn-secondary" style="width: 100%; font-size: 13px;">
+                <i class="fa-solid fa-eye"></i> View Full Deep Dive Page
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Bulk Actions Bar -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 16px 24px;">
+    <div class="filter-bar" style="margin-bottom: 0;">
+        <div style="flex: 1; min-width: 200px;">
+            <input type="text" id="tableSearchInput" class="form-control" placeholder="🔍 Search candidate name or skill...">
+        </div>
+
+        <div>
+            <select id="categoryFilterSelect" class="form-control">
+                <option value="ALL">All ML Categories</option>
+                <option value="Software Engineering">Software Engineering</option>
+                <option value="Data Science & AI">Data Science & AI</option>
+                <option value="DevOps & Cloud">DevOps & Cloud</option>
+                <option value="Product Management">Product Management</option>
+            </select>
+        </div>
+
+        <!-- 18. Multi-Column Sorting -->
+        <div>
+            <select id="sortSelect" class="form-control">
+                <option value="score_desc">Sort: Fit Score (High-Low)</option>
+                <option value="score_asc">Sort: Fit Score (Low-High)</option>
+                <option value="exp_desc">Sort: Experience (High-Low)</option>
+            </select>
+        </div>
+
+        <!-- 9. Bulk Action Buttons -->
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ url_for('export_results', format='csv') }}" class="btn btn-secondary" title="Export to CSV">
+                <i class="fa-solid fa-file-csv"></i> CSV
+            </a>
+            <a href="{{ url_for('export_results', format='json') }}" class="btn btn-secondary" title="Export to JSON">
+                <i class="fa-solid fa-file-code"></i> JSON
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Leaderboard Table -->
+<div class="glass-card">
+    <div class="table-responsive">
+        <table class="custom-table" id="leaderboardTable">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Candidate</th>
+                    <th>Target Role</th>
+                    <th>Predicted Domain</th>
+                    <th>Fit Score</th>
+                    <th>Skill Match</th>
+                    <th>Exp (Yrs)</th>
+                    <th>Recommendation</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboardTableBody">
+                {% for res in results %}
+                <tr class="candidate-row" 
+                    data-id="{{ res.id }}"
+                    data-name="{{ res.candidate_name }}" 
+                    data-skills="{{ res.matched_skills | join(',') }}" 
+                    data-missing="{{ res.missing_skills | join(',') }}"
+                    data-category="{{ res.candidate.predicted_category if res.candidate else 'General' }}" 
+                    data-status="{{ res.status }}"
+                    data-score="{{ res.overall_score }}"
+                    data-sim="{{ res.similarity_score }}"
+                    data-skillscore="{{ res.skill_score }}"
+                    data-expscore="{{ res.experience_score }}"
+                    data-eduscore="{{ res.education_score }}"
+                    data-exp="{{ res.candidate.experience_years if res.candidate else 0 }}"
+                    data-filename="{{ res.candidate.file_name if res.candidate else '' }}"
+                    data-email="{{ res.candidate.email if res.candidate else '' }}"
+                    data-notes="{{ res.ai_feedback }}">
+                    
+                    <td style="font-weight: 700; color: var(--primary);">#{{ loop.index }}</td>
+                    <td>
+                        <div style="font-weight: 600; color: #0F172A;">{{ res.candidate_name }}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">{{ res.candidate.email if res.candidate else '' }}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 500; color: #0F172A;">{{ res.job_title }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-tech">{{ res.candidate.predicted_category if res.candidate else 'General' }}</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="progress-bar-bg" style="width: 60px;">
+                                <div class="progress-bar-fill {% if res.overall_score >= 75 %}fill-emerald{% elif res.overall_score >= 55 %}fill-amber{% else %}fill-rose{% endif %}" style="width: {{ res.overall_score }}%;"></div>
+                            </div>
+                            <span style="font-weight: 700; font-size: 14px; color: #0F172A;">{{ res.overall_score }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: var(--emerald);">{{ res.skill_score }}%</span>
+                    </td>
+                    <td>
+                        <span style="color: #0F172A;">{{ res.candidate.experience_years if res.candidate else 0 }} yrs</span>
+                    </td>
+                    <td>
+                        <span class="badge {% if res.ai_recommendation == 'Strong Match' %}badge-strong{% elif res.ai_recommendation == 'Moderate Match' %}badge-moderate{% else %}badge-low{% endif %}">
+                            {{ res.ai_recommendation }}
+                        </span>
+                    </td>
+                    <!-- 15. Status Chips -->
+                    <td>
+                        <select class="form-control status-select-btn" data-result-id="{{ res.id }}" style="padding: 4px 8px; font-size: 12px; width: auto;">
+                            <option value="New" {% if res.status == 'New' %}selected{% endif %}>🔵 Review</option>
+                            <option value="Shortlisted" {% if res.status == 'Shortlisted' %}selected{% endif %}>🟢 Shortlisted</option>
+                            <option value="Interview" {% if res.status == 'Interview' %}selected{% endif %}>🟡 Interview</option>
+                            <option value="Rejected" {% if res.status == 'Rejected' %}selected{% endif %}>🔴 Rejected</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" class="btn btn-secondary open-drawer-btn" style="padding: 4px 8px; font-size: 12px;" title="Slide Drawer Preview">
+                                <i class="fa-solid fa-sidebar"></i> Drawer
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 32px;">
+                        No candidates screened yet. Go to <a href="{{ url_for('screen') }}" style="color: var(--primary);">Resume Screener</a> to get started.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const drawer = document.getElementById('candidateDrawer');
+    const closeBtn = document.getElementById('closeDrawerBtn');
+    const rows = document.querySelectorAll('.candidate-row');
+    const drawerRadarCtx = document.getElementById('drawerRadarChart').getContext('2d');
+    let drawerChart = null;
+
+    rows.forEach(row => {
+        row.addEventListener('click', (e) => {
+            if (e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION' || e.target.tagName === 'A') return;
+            
+            const name = row.getAttribute('data-name');
+            const job = row.getAttribute('data-skills');
+            const category = row.getAttribute('data-category');
+            const score = row.getAttribute('data-score');
+            const exp = row.getAttribute('data-exp');
+            const matched = row.getAttribute('data-skills').split(',');
+            const missing = row.getAttribute('data-missing').split(',');
+            const resultId = row.getAttribute('data-id');
+            const filename = row.getAttribute('data-filename');
+            const email = row.getAttribute('data-email');
+
+            const simScore = parseFloat(row.getAttribute('data-sim')) || 85;
+            const skillScore = parseFloat(row.getAttribute('data-skillscore')) || 90;
+            const expScore = parseFloat(row.getAttribute('data-expscore')) || 80;
+            const eduScore = parseFloat(row.getAttribute('data-eduscore')) || 95;
+
+            document.getElementById('drawerName').textContent = name;
+            document.getElementById('drawerCat').textContent = category;
+            document.getElementById('drawerScore').textContent = score + '%';
+            document.getElementById('drawerExp').textContent = exp + ' Yrs';
+
+            let explainHtml = '';
+            matched.forEach(m => {
+                if (m.trim()) explainHtml += `<span style="color: var(--emerald);">✔ Matched: ${m.trim()}</span>`;
+            });
+            missing.forEach(m => {
+                if (m.trim()) explainHtml += `<span style="color: var(--rose);">✖ Missing: ${m.trim()}</span>`;
+            });
+            document.getElementById('drawerExplain').innerHTML = explainHtml || '<span>✔ Primary tech stack matched</span>';
+
+            if (filename) {
+                document.getElementById('drawerDownloadBtn').href = `/uploads/${filename}`;
+            }
+            if (email) {
+                document.getElementById('drawerInviteBtn').href = `mailto:${email}?subject=Interview%20Invite`;
+            }
+            document.getElementById('drawerFullProfileLink').href = `/candidate/${resultId}`;
+
+            // Render Radar Chart
+            if (drawerChart) drawerChart.destroy();
+            drawerChart = new Chart(drawerRadarCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Similarity', 'Skill Match', 'Experience', 'Education'],
+                    datasets: [{
+                        data: [simScore, skillScore, expScore, eduScore],
+                        backgroundColor: 'rgba(2, 132, 199, 0.15)',
+                        borderColor: '#0284C7',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { ticks: { display: false, max: 100, min: 0 } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            drawer.classList.add('open');
+        });
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => drawer.classList.remove('open'));
+    }
+    if (drawer) {
+        drawer.addEventListener('click', (e) => {
+            if (e.target === drawer) drawer.classList.remove('open');
+        });
+    }
+
+    // Sort Handler
+    const sortSelect = document.getElementById('sortSelect');
+    const tableBody = document.getElementById('leaderboardTableBody');
+    if (sortSelect && tableBody) {
+        sortSelect.addEventListener('change', () => {
+            const val = sortSelect.value;
+            const rowArr = Array.from(tableBody.querySelectorAll('tr.candidate-row'));
+
+            rowArr.sort((a, b) => {
+                const scoreA = parseFloat(a.getAttribute('data-score')) || 0;
+                const scoreB = parseFloat(b.getAttribute('data-score')) || 0;
+                const expA = parseFloat(a.getAttribute('data-exp')) || 0;
+                const expB = parseFloat(b.getAttribute('data-exp')) || 0;
+
+                if (val === 'score_desc') return scoreB - scoreA;
+                if (val === 'score_asc') return scoreA - scoreB;
+                if (val === 'exp_desc') return expB - expA;
+                return 0;
+            });
+
+            rowArr.forEach(r => tableBody.appendChild(r));
+        });
+    }
+});
+</script>
+{% endblock %}

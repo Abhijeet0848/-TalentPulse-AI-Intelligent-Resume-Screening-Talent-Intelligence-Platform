@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Admin Console{% endblock %}
+{% block page_title %}System User Management{% endblock %}
+{% block page_subtitle %}Manage user accounts, assign roles, and govern platform permissions{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-users-gear" style="color: var(--accent);"></i> Registered System Users ({{ users | length }})
+        </h3>
+        <span class="badge badge-tech" style="background: rgba(99, 102, 241, 0.1); color: var(--accent); border-color: rgba(99, 102, 241, 0.3);">
+            <i class="fa-solid fa-shield-halved"></i> Admin Privilege Enabled
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>Email Address</th>
+                    <th>Assigned Role</th>
+                    <th>Registered Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td style="font-weight: 700; color: var(--text-muted);">#{{ u.id }}</td>
+                    <td>
+                        <div style="font-weight: 600; color: #0F172A;">{{ u.full_name }}</div>
+                    </td>
+                    <td>
+                        <span style="font-size: 13px; color: var(--text-secondary);">{{ u.email }}</span>
+                    </td>
+                    <td>
+                        <form action="{{ url_for('update_user_role', user_id=u.id) }}" method="POST" style="display: inline-flex; align-items: center; gap: 8px;">
+                            <select name="role" class="form-control" style="padding: 4px 8px; font-size: 12px; width: auto;" onchange="this.form.submit()">
+                                <option value="Recruiter" {% if u.role == 'Recruiter' %}selected{% endif %}>Technical Recruiter</option>
+                                <option value="HR Manager" {% if u.role == 'HR Manager' %}selected{% endif %}>HR Manager</option>
+                                <option value="Admin" {% if u.role == 'Admin' %}selected{% endif %}>Administrator</option>
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        <span style="font-size: 12px; color: var(--text-muted);">{{ u.created_at }}</span>
+                    </td>
+                    <td>
+                        {% if u.id != session.get('user_id') %}
+                        <form action="{{ url_for('delete_user', user_id=u.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?')" style="display: inline;">
+                            <button type="submit" class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px; color: var(--rose);">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </form>
+                        {% else %}
+                        <span style="font-size: 11px; color: var(--primary); font-weight: 600;">(Current User)</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

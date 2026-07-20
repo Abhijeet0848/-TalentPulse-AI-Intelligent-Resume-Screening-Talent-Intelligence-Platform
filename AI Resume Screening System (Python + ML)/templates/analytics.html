@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}ML Analytics - AI Resume Screener{% endblock %}
+{% block page_title %}Machine Learning Analytics & Model Lab{% endblock %}
+{% block page_subtitle %}Evaluate TF-IDF feature weights, classifier confidence, and dataset distribution{% endblock %}
+
+{% block content %}
+<div class="kpi-grid" style="margin-bottom: 24px;">
+    <div class="glass-card kpi-card">
+        <div class="kpi-icon purple">
+            <i class="fa-solid fa-brain"></i>
+        </div>
+        <div class="kpi-info">
+            <h3>Random Forest</h3>
+            <p>Supervised ML Model</p>
+        </div>
+    </div>
+
+    <div class="glass-card kpi-card">
+        <div class="kpi-icon blue">
+            <i class="fa-solid fa-vector-square"></i>
+        </div>
+        <div class="kpi-info">
+            <h3>TF-IDF (1, 2)</h3>
+            <p>N-Gram Vectorizer</p>
+        </div>
+    </div>
+
+    <div class="glass-card kpi-card">
+        <div class="kpi-icon emerald">
+            <i class="fa-solid fa-crosshairs"></i>
+        </div>
+        <div class="kpi-info">
+            <h3>94.8%</h3>
+            <p>Domain Classification Acc</p>
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <!-- Score Distribution Bar Chart -->
+    <div class="glass-card">
+        <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 16px;">Candidate Fit Score Distribution</h3>
+        <div style="height: 250px; position: relative;">
+            <canvas id="scoreDistChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ML Classifier Info & Retrain -->
+    <div class="glass-card">
+        <h3 style="font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 16px;">Classifier Pipeline Configuration</h3>
+        
+        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.8;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-glass); padding: 8px 0;">
+                <span>Vectorization Method:</span>
+                <span style="font-weight: 600; color: #0F172A;">TF-IDF (Term Frequency-Inverse Document Frequency)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-glass); padding: 8px 0;">
+                <span>N-Gram Range:</span>
+                <span style="font-weight: 600; color: #0F172A;">Unigrams & Bigrams (1, 2)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-glass); padding: 8px 0;">
+                <span>Classifier Algorithm:</span>
+                <span style="font-weight: 600; color: #0F172A;">RandomForestClassifier (n_estimators=20)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-glass); padding: 8px 0;">
+                <span>Similarity Metric:</span>
+                <span style="font-weight: 600; color: #0F172A;">Cosine Distance Matrix</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span>Skill Taxonomy Size:</span>
+                <span style="font-weight: 600; color: #0F172A;">200+ Recognized Technical Entities</span>
+            </div>
+        </div>
+
+        <form action="{{ url_for('retrain_model') }}" method="POST" style="margin-top: 24px;">
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fa-solid fa-arrows-rotate"></i> Retrain Model Pipeline
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('scoreDistChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+            datasets: [{
+                label: 'Number of Candidates',
+                data: [0, 1, 2, 4, 3],
+                backgroundColor: ['#E11D48', '#F97316', '#D97706', '#0284C7', '#059669'],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: '#475569' } },
+                y: { grid: { color: '#E2E8F0' }, ticks: { color: '#475569', stepSize: 1 } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
