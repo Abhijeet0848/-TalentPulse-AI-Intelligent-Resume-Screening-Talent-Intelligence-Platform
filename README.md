@@ -67,6 +67,24 @@ $$\text{Overall Fit Score} = (0.40 \times \text{Semantic Similarity}) + (0.30 \t
 
 ---
 
+## Glimpse
+<img width="1891" height="907" alt="image" src="https://github.com/user-attachments/assets/7723691f-b2e4-4628-8dfb-65328f15e564" />
+<img width="1918" height="906" alt="image" src="https://github.com/user-attachments/assets/26f097c0-a9bf-437e-a21c-9bb256184337" />
+<img width="1914" height="901" alt="image" src="https://github.com/user-attachments/assets/db76cd77-e7b2-465c-b797-ecda4525ec51" />
+<img width="1895" height="911" alt="image" src="https://github.com/user-attachments/assets/7f148b80-81e9-4918-9adb-897ca6d89dad" />
+<img width="1898" height="912" alt="image" src="https://github.com/user-attachments/assets/3201acc1-96f9-44a9-94aa-b00f453d3f56" />
+
+<img width="1912" height="905" alt="image" src="https://github.com/user-attachments/assets/4a34c76f-7f2d-42d6-bacb-70a512cb7231" />
+
+<img width="1915" height="907" alt="image" src="https://github.com/user-attachments/assets/57b1a7bf-5daa-4a15-9a64-d30f6b8dbde1" />
+
+<img width="1900" height="906" alt="image" src="https://github.com/user-attachments/assets/986f08c0-07ca-443b-a6c0-b0e863eb47f3" />
+
+
+
+
+
+
 ## 🚀 Quick Start & Installation
 
 ### Prerequisites
